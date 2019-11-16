@@ -6,8 +6,9 @@
  * @flow
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import firebase from 'react-native-firebase';
+import ImagePicker from 'react-native-image-picker';
 
 import {
   SafeAreaView,
@@ -16,6 +17,8 @@ import {
   View,
   Text,
   StatusBar,
+  TouchableOpacity,
+  Image
 } from 'react-native';
 
 import {
@@ -29,8 +32,66 @@ import {
 const { app } = firebase.storage();
 
 const App: () => React$Node = () => {
-  
+
+  const [imgSource, setImageSource] = useState('');
+
   alert(JSON.stringify(app));
+
+  const options = {
+    title: 'Select Image',
+    storageOptions: {
+      skipBackup: true,
+      path: 'images'
+    }
+  };
+
+  /**
+   * Select image method
+   */
+  pickImage = () => {
+    ImagePicker.showImagePicker(options, response => {
+      if (response.didCancel) {
+        alert('You cancelled image picker 😟');
+      } else if (response.error) {
+        alert('And error occured: ', response.error);
+      } else {
+        const source = { uri: response.uri };
+
+        setImageSource(source);
+      }
+    });
+  };
+
+  launchCamera = () => {
+    let options = {
+      storageOptions: {
+        skipBackup: true,
+        path: 'images',
+      },
+    };
+    ImagePicker.launchCamera(options, (response) => {
+      console.log('Response = ', response);
+
+      if (response.didCancel) {
+        console.log('User cancelled image picker');
+      } else if (response.error) {
+        console.log('ImagePicker Error: ', response.error);
+      } else if (response.customButton) {
+        console.log('User tapped custom button: ', response.customButton);
+        alert(response.customButton);
+      } else {
+        const source = { uri: response.uri };
+        console.log('response', JSON.stringify(response));
+        /**
+        this.setState({
+          filePath: response,
+          fileData: response.data,
+          fileUri: response.uri
+        });
+         */
+      }
+    });
+  }
 
   return (
     <>
@@ -46,32 +107,27 @@ const App: () => React$Node = () => {
             </View>
           )}
           <View style={styles.body}>
-            <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>Step One</Text>
-              <Text style={styles.sectionDescription}>
-                Edit <Text style={styles.highlight}>App.js</Text> to change this
-                screen and then come back to see your edits.
-              </Text>
+
+            <View style={styles.container}>
+              <Text style={styles.welcome}>React Native Firebase Image Upload </Text>
+              <Text style={styles.instructions}>Hello 👋, Let us upload an Image</Text>
+              {/** Select Image button */}
+              <TouchableOpacity style={styles.btn} onPress={this.pickImage}>
+                <View>
+                  <Text style={styles.btnTxt}>Pick image</Text>
+                </View>
+              </TouchableOpacity>
+              {/** Display selected image */}
+              {imgSource ? (
+                <Image
+                  source={imgSource}
+                  style={styles.image}
+                />
+              ) : (
+                  <Text>Select an Image!</Text>
+                )}
             </View>
-            <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>See Your Changes</Text>
-              <Text style={styles.sectionDescription}>
-                <ReloadInstructions />
-              </Text>
-            </View>
-            <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>Debug</Text>
-              <Text style={styles.sectionDescription}>
-                <DebugInstructions />
-              </Text>
-            </View>
-            <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>Learn More</Text>
-              <Text style={styles.sectionDescription}>
-                Read the docs to discover what to do next:
-              </Text>
-            </View>
-            <LearnMoreLinks />
+
           </View>
         </ScrollView>
       </SafeAreaView>
@@ -116,6 +172,40 @@ const styles = StyleSheet.create({
     paddingRight: 12,
     textAlign: 'right',
   },
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F5FCFF'
+  },
+  welcome: {
+    fontSize: 20,
+    textAlign: 'center',
+    margin: 10
+  },
+  instructions: {
+    textAlign: 'center',
+    color: '#333333',
+    marginBottom: 5
+  },
+  btn: {
+    borderWidth: 1,
+    paddingLeft: 20,
+    paddingRight: 20,
+    paddingTop: 10,
+    paddingBottom: 10,
+    borderRadius: 20,
+    borderColor: 'rgba(0,0,0,0.3)',
+    backgroundColor: 'rgb(68, 99, 147)'
+  },
+  btnTxt: {
+    color: '#fff'
+  },
+  image: {
+    marginTop: 20,
+    minWidth: 200,
+    height: 200
+  }
 });
 
 export default App;

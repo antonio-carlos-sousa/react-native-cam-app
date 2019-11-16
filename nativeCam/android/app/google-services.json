@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "493736602145",
+    "firebase_url": "https://nativecam-65ff3.firebaseio.com",
+    "project_id": "nativecam-65ff3",
+    "storage_bucket": "nativecam-65ff3.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:493736602145:android:e844071a92950235d6d160",
+        "android_client_info": {
+          "package_name": "com.nativecam"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "493736602145-lo2n568drf53p169sl9se48fg9iuql8m.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAQNlWNGkYH3PV4-a01VEZf_ND-IT5XVUE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "493736602145-lo2n568drf53p169sl9se48fg9iuql8m.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "493736602145-6tncdmvgn9n1lo7r8bv7hadpj1ipme1q.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "org.reactjs.native.example.nativeCam"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
