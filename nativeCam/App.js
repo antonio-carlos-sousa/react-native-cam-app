@@ -34,8 +34,7 @@ const { app } = firebase.storage();
 const App: () => React$Node = () => {
 
   const [imgSource, setImageSource] = useState('');
-
-  alert(JSON.stringify(app));
+  const [uploading, setUploading] = useState(false);
 
   const options = {
     title: 'Select Image',
@@ -56,12 +55,14 @@ const App: () => React$Node = () => {
         alert('And error occured: ', response.error);
       } else {
         const source = { uri: response.uri };
+        alert(source.uri);
 
-        setImageSource(source);
+        //setImageSource(source);
       }
     });
   };
 
+  /** not using atm */
   launchCamera = () => {
     let options = {
       storageOptions: {
@@ -69,6 +70,7 @@ const App: () => React$Node = () => {
         path: 'images',
       },
     };
+
     ImagePicker.launchCamera(options, (response) => {
       console.log('Response = ', response);
 
@@ -92,6 +94,48 @@ const App: () => React$Node = () => {
       }
     });
   }
+
+  uploadImage = () => {
+    const ext = imgSource.split('.').pop(); // Extract image extension
+    const filename = `${uuid()}.${ext}`; // Generate unique name
+    
+    setUploading(true);
+
+    firebase
+      .storage()
+      .ref(`marriage/photos/${filename}`)
+      .putFile(imgSource)
+      .on(
+        firebase.storage.TaskEvent.STATE_CHANGED,
+        snapshot => {
+          
+          //let state = {};
+          //state = {
+            //...state,
+            //progress: (snapshot.bytesTransferred / snapshot.totalBytes) * 100 // Calculate progress percentage
+          //};
+
+          if (snapshot.state === firebase.storage.TaskState.SUCCESS) {
+            const allImages = this.state.images;
+            allImages.push(snapshot.downloadURL);
+            state = {
+              ...state,
+              uploading: false,
+              imgSource: '',
+              imageUri: '',
+              progress: 0,
+              images: allImages
+            };
+            AsyncStorage.setItem('photos', JSON.stringify(allImages));
+          }
+          this.setState(state);
+        },
+        error => {
+          unsubscribe();
+          alert('Sorry, Try again.');
+        }
+      );
+  };
 
   return (
     <>
