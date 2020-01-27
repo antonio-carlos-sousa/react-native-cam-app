@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import firebase from 'react-native-firebase';
 import ImagePicker from 'react-native-image-picker';
-//import uuid from 'react-native-uuid';
+import uuid from 'react-native-uuid';
 
 import {
   SafeAreaView,
@@ -65,7 +65,6 @@ const App: () => React$Node = () => {
     };
 
     ImagePicker.launchCamera(options, (response) => {
-      console.log('Response = ', response);
 
       if (response.didCancel) {
         console.log('User cancelled image picker');
@@ -76,60 +75,34 @@ const App: () => React$Node = () => {
         alert(response.customButton);
       } else {
         const source = { uri: response.uri };
-        
+
         setImageSource(source);
 
-        testUpload();
+        uploadImage();
       }
     });
   }
 
-  testUpload = () => {
-    alert('starting loading');
-
-    var x = uuid();
-    alert(x);
-  }
-
   uploadImage = () => {
 
-    let x = uuid();
-
     const ext = imgSource.uri.split('.').pop(); // Extract image extension
-    const filename = `${x}.${ext}`; // Generate unique name
+    const filename = `${uuid()}.${ext}`; // Generate unique name
 
     setUploading(true);
 
     firebase
       .storage()
       .ref(`marriage/photos/${filename}`)
-      .putFile(imgSource)
+      .putFile(imgSource.uri)
       .on(
         firebase.storage.TaskEvent.STATE_CHANGED,
         snapshot => {
 
+          console.log(snapshot.bytesTransferred);
+
           setProgress((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
 
-          //let state = {};
-          //state = {
-          //...state,
-          //progress: (snapshot.bytesTransferred / snapshot.totalBytes) * 100 // Calculate progress percentage
-          //};
-
           if (snapshot.state === firebase.storage.TaskState.SUCCESS) {
-
-            /**
-            const allImages = this.state.images;
-            allImages.push(snapshot.downloadURL);
-            state = {
-              ...state,
-              uploading: false,
-              imgSource: '',
-              imageUri: '',
-              progress: 0,
-              images: allImages
-            };
-            */
 
             AsyncStorage.setItem('photos', JSON.stringify(snapshot.downloadURL));
           }
@@ -141,6 +114,8 @@ const App: () => React$Node = () => {
         error => {
           unsubscribe();
           alert('Sorry, Try again.');
+        }, () => {
+          console.log('finnaly?');
         }
       );
   };
@@ -178,6 +153,12 @@ const App: () => React$Node = () => {
               ) : (
                   <Text>Select an Image!</Text>
                 )}
+
+              {uploading && (
+                <View
+                  style={[styles.progressBar, { width: `${progress}%` }]}
+                />
+              )}
             </View>
 
           </View>
@@ -257,6 +238,12 @@ const styles = StyleSheet.create({
     marginTop: 20,
     minWidth: 200,
     height: 200
+  },
+  progressBar: {
+    marginTop: 40,
+    backgroundColor: 'rgb(3, 154, 229)',
+    height: 3,
+    shadowColor: '#000',
   }
 });
 
