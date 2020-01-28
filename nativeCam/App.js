@@ -1,14 +1,7 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- * @flow
- */
-
 import React, { useState } from 'react';
 import firebase from 'react-native-firebase';
 import ImagePicker from 'react-native-image-picker';
+import uuid from 'react-native-uuid';
 
 import {
   SafeAreaView,
@@ -31,11 +24,11 @@ import {
 
 const { app } = firebase.storage();
 
-const App: () => React$Node = () => {
+const App = () => {
 
   const [imgSource, setImageSource] = useState('');
-
-  alert(JSON.stringify(app));
+  const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState(0);
 
   const options = {
     title: 'Select Image',
@@ -45,32 +38,9 @@ const App: () => React$Node = () => {
     }
   };
 
-  /**
-   * Select image method
-   */
-  pickImage = () => {
-    ImagePicker.showImagePicker(options, response => {
-      if (response.didCancel) {
-        alert('You cancelled image picker 😟');
-      } else if (response.error) {
-        alert('And error occured: ', response.error);
-      } else {
-        const source = { uri: response.uri };
-
-        setImageSource(source);
-      }
-    });
-  };
-
   launchCamera = () => {
-    let options = {
-      storageOptions: {
-        skipBackup: true,
-        path: 'images',
-      },
-    };
+
     ImagePicker.launchCamera(options, (response) => {
-      console.log('Response = ', response);
 
       if (response.didCancel) {
         console.log('User cancelled image picker');
@@ -81,17 +51,39 @@ const App: () => React$Node = () => {
         alert(response.customButton);
       } else {
         const source = { uri: response.uri };
-        console.log('response', JSON.stringify(response));
-        /**
-        this.setState({
-          filePath: response,
-          fileData: response.data,
-          fileUri: response.uri
-        });
-         */
+
+        setImageSource(source);
+
+        uploadImage();
       }
     });
   }
+
+  uploadImage = () => {
+
+    const ext = imgSource.uri.split('.').pop(); // Extract image extension
+    const filename = `${uuid()}.${ext}`; // Generate unique name
+
+    setUploading(true);
+
+    firebase
+      .storage()
+      .ref(`marriage/photos/${filename}`)
+      .putFile(imgSource.uri)
+      .on(
+        firebase.storage.TaskEvent.STATE_CHANGED,
+        snapshot => {
+          setProgress((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+        },
+        error => {
+          unsubscribe();
+          alert('Sorry, Try again.');
+        }, () => {
+          setProgress(0);
+          setUploading(false);
+        }
+      );
+  };
 
   return (
     <>
@@ -112,7 +104,7 @@ const App: () => React$Node = () => {
               <Text style={styles.welcome}>React Native Firebase Image Upload </Text>
               <Text style={styles.instructions}>Hello 👋, Let us upload an Image</Text>
               {/** Select Image button */}
-              <TouchableOpacity style={styles.btn} onPress={this.pickImage}>
+              <TouchableOpacity style={styles.btn} onPress={this.launchCamera}>
                 <View>
                   <Text style={styles.btnTxt}>Pick image</Text>
                 </View>
@@ -126,6 +118,12 @@ const App: () => React$Node = () => {
               ) : (
                   <Text>Select an Image!</Text>
                 )}
+
+              {uploading && (
+                <View
+                  style={[styles.progressBar, { width: `${progress}%` }]}
+                />
+              )}
             </View>
 
           </View>
@@ -205,6 +203,12 @@ const styles = StyleSheet.create({
     marginTop: 20,
     minWidth: 200,
     height: 200
+  },
+  progressBar: {
+    marginTop: 40,
+    backgroundColor: 'rgb(3, 154, 229)',
+    height: 3,
+    shadowColor: '#000',
   }
 });
 
