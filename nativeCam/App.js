@@ -24,7 +24,7 @@ import {
 
 const { app } = firebase.storage();
 
-const App: () => React$Node = () => {
+const App = () => {
 
   const [imgSource, setImageSource] = useState('');
   const [uploading, setUploading] = useState(false);
@@ -38,31 +38,7 @@ const App: () => React$Node = () => {
     }
   };
 
-  /**
-   * Select image method
-   */
-  pickImage = () => {
-    ImagePicker.showImagePicker(options, response => {
-      if (response.didCancel) {
-        alert('You cancelled image picker 😟');
-      } else if (response.error) {
-        alert('And error occured: ', response.error);
-      } else {
-        const source = { uri: response.uri };
-
-        setImageSource(source);
-      }
-    });
-  };
-
-  /** not using atm */
   launchCamera = () => {
-    let options = {
-      storageOptions: {
-        skipBackup: true,
-        path: 'images',
-      },
-    };
 
     ImagePicker.launchCamera(options, (response) => {
 
@@ -97,25 +73,14 @@ const App: () => React$Node = () => {
       .on(
         firebase.storage.TaskEvent.STATE_CHANGED,
         snapshot => {
-
-          console.log(snapshot.bytesTransferred);
-
           setProgress((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
-
-          if (snapshot.state === firebase.storage.TaskState.SUCCESS) {
-
-            AsyncStorage.setItem('photos', JSON.stringify(snapshot.downloadURL));
-          }
-
-          this.setState(state);
-          this.setUploading(false);
-          this.setProgress(0);
         },
         error => {
           unsubscribe();
           alert('Sorry, Try again.');
         }, () => {
-          console.log('finnaly?');
+          setProgress(0);
+          setUploading(false);
         }
       );
   };
