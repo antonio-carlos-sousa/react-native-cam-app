@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import firebase from 'react-native-firebase';
 import ImagePicker from 'react-native-image-picker';
 import uuid from 'react-native-uuid';
+import buffer from 'buffer';
+global.Buffer = buffer.Buffer
 
 import {
   SafeAreaView,
@@ -34,7 +36,7 @@ const App = () => {
     title: 'Select Image',
     storageOptions: {
       skipBackup: true,
-      path: 'images'
+      path: 'images',
     }
   };
 
@@ -50,13 +52,62 @@ const App = () => {
         console.log('User tapped custom button: ', response.customButton);
         alert(response.customButton);
       } else {
-        const source = { uri: response.uri };
+        const source = { uri: response.uri, img: response.data };
 
         setImageSource(source);
 
-        uploadImage();
+        validateImg();
       }
     });
+  }
+
+  validateImg = () => {
+    var subscriptionKey = "";
+
+    var uriBase =
+      "https://westcentralus.api.cognitive.microsoft.com/face/v1.0/detect";
+
+    fetch(`${uriBase}?returnFaceId=true`, {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/octet-stream',
+        'Ocp-Apim-Subscription-Key': subscriptionKey
+      },
+      body: Buffer.from(imgSource.img, 'base64')
+    })
+      .then((response) => {
+        if (response.status >= 400) {
+          // We Should have some problems try again
+          console.log("We Should have some problems try again");
+          console.log(response);
+          return response.json();
+        }
+
+        return response.json();
+      })
+      .then((responseJson) => {
+        if (!responseJson) { return; }
+
+        var result = responseJson[0];
+
+        if (!result) {
+          // set error image because no faces detected try again
+          console.log("set error image because no faces detected try again");
+          console.log(result);
+          return;
+        }
+
+        if (result.faceId) {
+
+          // upload image
+          console.log(result);
+          uploadImage();
+        }
+      })
+      .catch((error) => {
+        console.error(error);
+      });
   }
 
   uploadImage = () => {
